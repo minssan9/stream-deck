@@ -16,3 +16,9 @@ export interface ButtonEvent {
   button_id: string;
   action: string;
 }
+
+/** BLE connection lifecycle event. Mirrors `ConnectionStatusPayload` in `ble_server.rs`. */
+export interface BleConnectionStatusEvent {
+  status: "scanning" | "connected" | "disconnected" | "error";
+  message: string;
+}

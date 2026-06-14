@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import DeckButton from "./components/DeckButton";
 import { DEFAULT_BUTTONS } from "./deckConfig";
-import type { ButtonEvent, DeckButtonConfig } from "./types";
+import type { BleConnectionStatusEvent, ButtonEvent, DeckButtonConfig } from "./types";
 
 type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error";
 
@@ -37,11 +37,9 @@ function App() {
 
   const connectBluetooth = async () => {
     setStatus("connecting");
-    setStatusMessage("Scanning for device...");
+    setStatusMessage("Starting BLE server...");
     try {
-      const result = await invoke<string>("start_ble_server");
-      setStatus("connected");
-      setStatusMessage(result);
+      await invoke<string>("start_ble_server");
     } catch (err) {
       setStatus("error");
       setStatusMessage(String(err));
@@ -49,7 +47,7 @@ function App() {
   };
 
   useEffect(() => {
-    const unlistenPromise = listen<ButtonEvent>("ble-button-event", (event) => {
+    const unlistenButton = listen<ButtonEvent>("ble-button-event", (event) => {
       const { button_id } = event.payload;
       const config = buttons.find((b) => b.id === button_id);
       if (config) {
@@ -57,8 +55,28 @@ function App() {
       }
     });
 
+    const unlistenStatus = listen<BleConnectionStatusEvent>("ble-connection-status", (event) => {
+      const { status: bleStatus, message } = event.payload;
+      switch (bleStatus) {
+        case "scanning":
+          setStatus("connecting");
+          break;
+        case "connected":
+          setStatus("connected");
+          break;
+        case "disconnected":
+          setStatus("disconnected");
+          break;
+        case "error":
+          setStatus("error");
+          break;
+      }
+      setStatusMessage(message);
+    });
+
     return () => {
-      unlistenPromise.then((unlisten) => unlisten());
+      unlistenButton.then((unlisten) => unlisten());
+      unlistenStatus.then((unlisten) => unlisten());
       if (highlightTimeout.current) {
         window.clearTimeout(highlightTimeout.current);
       }

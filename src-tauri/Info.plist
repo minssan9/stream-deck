@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!--
+      Required on macOS for the app to scan/connect to BLE peripherals
+      (the StreamDeckRemote mobile companion app). Tauri's bundler merges
+      this file's keys into the generated app bundle's Info.plist.
+    -->
+    <key>NSBluetoothAlwaysUsageDescription</key>
+    <string>Stream Deck Host uses Bluetooth to connect to the Stream Deck Remote mobile app and receive button presses.</string>
+</dict>
+</plist>
