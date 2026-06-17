@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import DeckButton from "./components/DeckButton";
+import EditModal from "./components/EditModal";
 import { DEFAULT_BUTTONS } from "./deckConfig";
 import type { BleConnectionStatusEvent, ButtonEvent, DeckButtonConfig } from "./types";
 
@@ -10,8 +11,9 @@ type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error";
 const ACTIVE_HIGHLIGHT_MS = 400;
 
 function App() {
-  const [buttons] = useState<DeckButtonConfig[]>(DEFAULT_BUTTONS);
+  const [buttons, setButtons] = useState<DeckButtonConfig[]>(DEFAULT_BUTTONS);
   const [activeButtonId, setActiveButtonId] = useState<string | null>(null);
+  const [editTarget, setEditTarget] = useState<DeckButtonConfig | null>(null);
   const [status, setStatus] = useState<ConnectionStatus>("disconnected");
   const [statusMessage, setStatusMessage] = useState<string>("Not connected");
   const highlightTimeout = useRef<number | undefined>(undefined);
@@ -33,6 +35,26 @@ function App() {
     } catch (err) {
       console.error("Failed to execute macro", err);
     }
+  };
+
+  useEffect(() => {
+    invoke<DeckButtonConfig[]>("load_button_config")
+      .then((loaded) => setButtons(loaded))
+      .catch(() => { /* file not found on first run — keep DEFAULT_BUTTONS */ });
+  }, []);
+
+  const saveButtons = async (updated: DeckButtonConfig[]) => {
+    setButtons(updated);
+    try {
+      await invoke("save_button_config", { configs: updated });
+    } catch (err) {
+      console.error("Failed to save button config", err);
+    }
+  };
+
+  const handleEditSave = (updated: DeckButtonConfig) => {
+    const next = buttons.map((b) => (b.id === updated.id ? updated : b));
+    void saveButtons(next);
   };
 
   const connectBluetooth = async () => {
@@ -119,10 +141,19 @@ function App() {
               config={config}
               active={activeButtonId === config.id}
               onPress={runMacro}
+              onEdit={setEditTarget}
             />
           ))}
         </div>
       </section>
+
+      {editTarget && (
+        <EditModal
+          config={editTarget}
+          onSave={handleEditSave}
+          onClose={() => setEditTarget(null)}
+        />
+      )}
     </main>
   );
 }
