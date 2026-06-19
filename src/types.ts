@@ -8,7 +8,22 @@ export type MacroAction =
 export interface DeckButtonConfig {
   id: string;
   label: string;
+  /** Emoji char or data:image/...;base64,... URI. */
+  icon?: string;
   macro: MacroAction[];
+}
+
+/** A named page of 15 buttons. Mirrors `Profile` in `config.rs`. */
+export interface Profile {
+  id: string;
+  name: string;
+  buttons: DeckButtonConfig[];
+}
+
+/** Root persisted structure. Mirrors `ProfileStore` in `config.rs`. */
+export interface ProfileStore {
+  active_id: string;
+  profiles: Profile[];
 }
 
 /** Payload received from the mobile device over BLE. Mirrors `ButtonEvent` in `ble_server.rs`. */

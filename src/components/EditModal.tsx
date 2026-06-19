@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import type { DeckButtonConfig, MacroAction } from "../types";
 
 interface EditModalProps {
@@ -62,7 +63,7 @@ function ActionEditor({
       <input
         className="flex-1 rounded bg-neutral-700 px-2 py-1 text-sm text-neutral-100 outline-none focus:ring-1 focus:ring-blue-500"
         value={action.path}
-        placeholder="/usr/bin/vim or notepad.exe"
+        placeholder="/Applications/TextEdit.app"
         onChange={(e) => onChange(index, { type: "OpenApp", path: e.currentTarget.value })}
       />
       <RemoveButton onRemove={() => onRemove(index)} />
@@ -85,7 +86,9 @@ function RemoveButton({ onRemove }: { onRemove: () => void }) {
 
 function EditModal({ config, onSave, onClose }: EditModalProps) {
   const [label, setLabel] = useState(config.label);
+  const [icon, setIcon] = useState(config.icon ?? "");
   const [actions, setActions] = useState<MacroAction[]>([...config.macro]);
+  const [testing, setTesting] = useState(false);
 
   const updateAction = (index: number, updated: MacroAction) => {
     setActions((prev) => prev.map((a, i) => (i === index ? updated : a)));
@@ -104,8 +107,25 @@ function EditModal({ config, onSave, onClose }: EditModalProps) {
     setActions((prev) => [...prev, defaults[type]]);
   };
 
+  const handleTest = async () => {
+    if (actions.length === 0) return;
+    setTesting(true);
+    try {
+      await invoke("execute_macro", { payload: JSON.stringify(actions) });
+    } catch (err) {
+      console.error("Macro test failed", err);
+    } finally {
+      setTesting(false);
+    }
+  };
+
   const handleSave = () => {
-    onSave({ ...config, label: label.trim() || config.label, macro: actions });
+    onSave({
+      ...config,
+      label: label.trim() || config.label,
+      icon: icon.trim() || undefined,
+      macro: actions,
+    });
     onClose();
   };
 
@@ -126,17 +146,40 @@ function EditModal({ config, onSave, onClose }: EditModalProps) {
           </button>
         </div>
 
-        <div className="mb-4">
-          <label className="mb-1 block text-xs text-neutral-400">Label</label>
-          <input
-            className="w-full rounded bg-neutral-800 px-3 py-2 text-sm text-neutral-100 outline-none focus:ring-1 focus:ring-blue-500"
-            value={label}
-            onChange={(e) => setLabel(e.currentTarget.value)}
-          />
+        <div className="mb-3 flex gap-3">
+          <div className="flex-1">
+            <label className="mb-1 block text-xs text-neutral-400">Label</label>
+            <input
+              className="w-full rounded bg-neutral-800 px-3 py-2 text-sm text-neutral-100 outline-none focus:ring-1 focus:ring-blue-500"
+              value={label}
+              onChange={(e) => setLabel(e.currentTarget.value)}
+            />
+          </div>
+          <div className="w-28">
+            <label className="mb-1 block text-xs text-neutral-400">Icon (emoji)</label>
+            <input
+              className="w-full rounded bg-neutral-800 px-3 py-2 text-center text-xl outline-none focus:ring-1 focus:ring-blue-500"
+              value={icon}
+              placeholder="🎯"
+              maxLength={4}
+              onChange={(e) => setIcon(e.currentTarget.value)}
+            />
+          </div>
         </div>
 
         <div className="mb-4">
-          <label className="mb-2 block text-xs text-neutral-400">Macro steps</label>
+          <div className="mb-2 flex items-center justify-between">
+            <label className="text-xs text-neutral-400">Macro steps</label>
+            <button
+              type="button"
+              onClick={handleTest}
+              disabled={testing || actions.length === 0}
+              className="flex items-center gap-1 rounded bg-neutral-700 px-2 py-1 text-xs text-neutral-300 hover:bg-neutral-600 disabled:opacity-40"
+              title="Run macro now (without saving)"
+            >
+              {testing ? "Running..." : "▶ Test"}
+            </button>
+          </div>
           <div className="space-y-2">
             {actions.length === 0 && (
               <p className="text-xs text-neutral-500">No steps. Add one below.</p>

@@ -13,13 +13,20 @@ function DeckButton({ config, active, onPress, onEdit }: DeckButtonProps) {
       <button
         type="button"
         onClick={() => onPress(config)}
-        className={`flex aspect-square w-full flex-col items-center justify-center rounded-xl border text-sm font-medium transition-all duration-150 ${
+        className={`flex aspect-square w-full flex-col items-center justify-center gap-1 rounded-xl border text-sm font-medium transition-all duration-150 ${
           active
             ? "border-emerald-400 bg-emerald-500/20 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.5)] scale-95"
             : "border-neutral-700 bg-neutral-800 text-neutral-200 hover:border-neutral-500 hover:bg-neutral-700"
         }`}
       >
-        <span>{config.label}</span>
+        {config.icon && (
+          config.icon.startsWith("data:") ? (
+            <img src={config.icon} alt="" className="h-7 w-7 rounded object-cover" />
+          ) : (
+            <span className="text-2xl leading-none">{config.icon}</span>
+          )
+        )}
+        <span className="truncate px-1 text-xs">{config.label}</span>
       </button>
       <button
         type="button"

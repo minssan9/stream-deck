@@ -1,3 +1,4 @@
+import { NativeModules, Platform } from "react-native";
 import BleManager from "react-native-ble-peripheral";
 import {
   CHARACTERISTIC_UUID,
@@ -8,6 +9,12 @@ import {
   SERVICE_UUID,
 } from "./constants";
 import type { ButtonEvent } from "../types";
+
+/** Android-only native module registered by ConnectionPriorityPackage. */
+const ConnectionPriority: {
+  requestHigh: () => Promise<void>;
+  requestBalanced: () => Promise<void>;
+} | null = Platform.OS === "android" ? (NativeModules.ConnectionPriority ?? null) : null;
 
 let started = false;
 
@@ -33,6 +40,17 @@ export async function startPeripheral(): Promise<void> {
 
   await BleManager.start();
   started = true;
+
+  // On Android, request high connection priority once the peripheral is up.
+  // This asks the BLE stack to use a ~7.5 ms connection interval, targeting <50 ms
+  // notification latency. iOS does not expose a peripheral-side API for this.
+  if (ConnectionPriority) {
+    try {
+      await ConnectionPriority.requestHigh();
+    } catch {
+      // Best-effort: failure here doesn't block functionality, just impacts latency.
+    }
+  }
 }
 
 /** Stop advertising and tear down the GATT server. */
@@ -41,6 +59,9 @@ export function stopPeripheral(): void {
     return;
   }
 
+  if (ConnectionPriority) {
+    try { await ConnectionPriority.requestBalanced(); } catch { /* ignore */ }
+  }
   BleManager.stop();
   started = false;
 }

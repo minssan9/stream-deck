@@ -1,6 +1,5 @@
-import type { DeckButtonConfig } from "./types";
+import type { DeckButtonConfig, Profile, ProfileStore } from "./types";
 
-/** Default 3x5 (15 button) layout with placeholder macros for the MVP. */
 export const DEFAULT_BUTTONS: DeckButtonConfig[] = Array.from({ length: 15 }, (_, i) => {
   const n = i + 1;
   return {
@@ -12,3 +11,14 @@ export const DEFAULT_BUTTONS: DeckButtonConfig[] = Array.from({ length: 15 }, (_
     ],
   };
 });
+
+export const DEFAULT_PROFILE: Profile = {
+  id: "default",
+  name: "Default",
+  buttons: DEFAULT_BUTTONS,
+};
+
+export const DEFAULT_STORE: ProfileStore = {
+  active_id: "default",
+  profiles: [DEFAULT_PROFILE],
+};
