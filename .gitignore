@@ -12,6 +12,16 @@ dist
 dist-ssr
 *.local
 
+# Rust / Tauri build output
+src-tauri/target
+src-tauri/gen
+
+# Mobile build output
+mobile-app/android/build
+mobile-app/android/app/build
+mobile-app/ios/build
+mobile-app/ios/Pods
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
