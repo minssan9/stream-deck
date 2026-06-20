@@ -107,10 +107,15 @@ cargo test
 
 ### 2-1. React Native 프로젝트 생성
 
+> ⚠️ `npx react-native init` 은 **deprecated** 되었습니다.  
+> 대신 `@react-native-community/cli` 를 사용하세요.
+
 ```bash
+# (선택) 과거에 전역 설치한 CLI가 있다면 제거 — 충돌 방지
+npm uninstall -g react-native-cli @react-native-community/cli
+
 # 저장소 루트에서
-npx react-native@0.75 init StreamDeckRemote \
-  --template react-native-template-typescript \
+npx @react-native-community/cli@latest init StreamDeckRemote \
   --directory mobile-app
 
 cd mobile-app

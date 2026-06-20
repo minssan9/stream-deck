@@ -16,7 +16,9 @@
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-opener": "^2",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-native-ble-peripheral": "^2.0.1",
+    "react-native-keep-awake": "^4.0.0"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",
